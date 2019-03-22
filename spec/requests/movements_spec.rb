@@ -9,8 +9,6 @@ RSpec.describe 'Movements API', type: :request do
   let(:account_id) { account.id }
   let(:id) { movements.first.id }
   let(:headers) { valid_headers }
-  let(:admin_headers) {{
-      "Authorization" => token_generator(admin.id), "Content-Type" => "application/json" }}
 
   # Test suite for GET /users/:user_id/accounts/:account_id/movements
   describe 'GET /users/:user_id/accounts/:account_id/movements' do
@@ -70,16 +68,19 @@ RSpec.describe 'Movements API', type: :request do
   describe 'POST /users/:user_id/accounts/:account_id/movements' do
     let(:valid_attributes) { { amount: 300.00, reference: "zxcvbnmsadfhjglkqweryt" }.to_json }
 
-    context 'when request attributes are valid' do
-      before { post "/users/#{user_id}/accounts/#{account_id}/movements", params: valid_attributes, headers: admin_headers }
+    before { post "/users/#{user_id}/accounts/#{account_id}/movements", params: valid_attributes, headers: headers }
 
+    context 'when request attributes are valid' do
+      let(:headers) { admin_headers }
       it 'returns status code 201' do
         expect(response).to have_http_status(201)
       end
     end
 
     context 'when an invalid request' do
-      before { post "/users/#{user_id}/accounts/#{account_id}/movements", params: {}, headers: admin_headers }
+      let(:headers) { admin_headers }
+      
+      before { post "/users/#{user_id}/accounts/#{account_id}/movements", params: {}, headers: headers }
 
       it 'returns status code 422' do
         expect(response).to have_http_status(422)
@@ -91,7 +92,7 @@ RSpec.describe 'Movements API', type: :request do
     end
 
     context 'when the user is not an admin' do
-      before { post "/users/#{user_id}/accounts/#{account_id}/movements", params: valid_attributes, headers: headers }
+      let(:headers) { valid_headers }
 
       it 'returns an Unauthorized request error' do
         expect(response.body)
@@ -107,8 +108,9 @@ RSpec.describe 'Movements API', type: :request do
   # Test suite for PUT /users/:user_id/accounts/:account_id/movements/:id
   describe 'PUT /users/:user_id/accounts/:account_id/movements/:id' do
     let(:valid_attributes) { { reference: "somethingcool" }.to_json }
+    let(:headers) { admin_headers }
 
-    before { put "/users/#{user_id}/accounts/#{account_id}/movements/#{id}", params: valid_attributes, headers: admin_headers }
+    before { put "/users/#{user_id}/accounts/#{account_id}/movements/#{id}", params: valid_attributes, headers: headers }
 
     context 'when movement exists' do
       it 'returns status code 204' do
@@ -134,7 +136,7 @@ RSpec.describe 'Movements API', type: :request do
     end
 
     context 'when the user is not an admin' do
-      before { put "/users/#{user_id}/accounts/#{account_id}/movements/#{id}", params: valid_attributes, headers: headers }
+      let(:headers) { valid_headers }
 
       it 'returns an Unauthorized request error' do
         expect(response.body)
@@ -149,8 +151,10 @@ RSpec.describe 'Movements API', type: :request do
 
   # Test suite for DELETE /users/:user_id/accounts/:account_id/movements/:id
   describe 'DELETE /users/:user_id/accounts/:account_id/movements/:id' do
+    before { delete "/users/#{user_id}/accounts/#{account_id}/movements/#{id}", params: {}, headers: headers }
+    
     context 'the user is an admin' do
-      before { delete "/users/#{user_id}/accounts/#{account_id}/movements/#{id}", params: {}, headers: admin_headers }
+      let(:headers) { admin_headers }
 
       it 'returns status code 204' do
         expect(response).to have_http_status(204)
@@ -158,8 +162,6 @@ RSpec.describe 'Movements API', type: :request do
     end
 
     context 'the user is not an admin' do
-      before { delete "/users/#{user_id}/accounts/#{account_id}/movements/#{id}", params: {}, headers: headers }
-
       it 'returns an Unauthorized request error' do
         expect(response.body)
         .to match(/Unauthorized request/)

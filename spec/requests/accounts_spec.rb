@@ -2,16 +2,15 @@ require 'rails_helper'
 
 RSpec.describe 'Accounts API', type: :request do
   # initialize test data 
-  let(:admin) { create(:user, admin: true) }
-  let(:user) { create(:user) }
+  let!(:admin) { create(:user, admin: true) }
+  let!(:user) { create(:user) }
   let(:user_id) { user.id }
   let(:other_user) { create(:user) }
   let!(:accounts) { create_list(:account, 10, user_id: user_id) }
-  let(:account_id) { accounts.first.id }
+  let(:account) { accounts.first }
+  let(:account_id) { account.id }
   # authorize request
   let(:headers) { valid_headers }
-  let(:admin_headers) {{
-      "Authorization" => token_generator(admin.id), "Content-Type" => "application/json" }}
 
   # Test suite for GET /accounts
   describe 'GET /users/:user_id/accounts' do
@@ -61,14 +60,12 @@ RSpec.describe 'Accounts API', type: :request do
   describe 'POST /users/:user_id/accounts' do
     # valid payload
     let(:valid_attributes) { { CLABE: '1234567890abcdf12', user_id: user.id.to_s }.to_json }
-    # let(:headers) {{
-    #   "Authorization" => token_generator(admin.id), "Content-Type" => "application/json"
-    # }}
-
+    let(:headers) { admin_headers }
+    
+    before { post "/users/#{user_id}/accounts", params: valid_attributes, headers: headers }
+    
     context 'when the request is valid' do
-      before { post "/users/#{user_id}/accounts", params: valid_attributes, headers: admin_headers }
-
-      it 'creates a account' do
+      it 'creates an account' do
         expect(json['CLABE']).to eq('1234567890abcdf12')
       end
 
@@ -78,7 +75,7 @@ RSpec.describe 'Accounts API', type: :request do
     end
 
     context 'when the CLABE is already taken' do
-      before { post "/users/#{user_id}/accounts", params: { CLABE: accounts.first.CLABE }.to_json, headers: admin_headers }
+      let(:valid_attributes) { { CLABE: accounts.first.CLABE }.to_json }
 
       it 'returns status code 422' do
         expect(response).to have_http_status(422)
@@ -91,8 +88,8 @@ RSpec.describe 'Accounts API', type: :request do
     end
 
     context 'when the user is not an admin' do
-      before { post "/users/#{user_id}/accounts", params: valid_attributes, headers: headers }
-
+      let(:headers) { valid_headers }
+      
       it 'returns an Unauthorized request error' do
         expect(response.body)
         .to match(/Unauthorized request/)
@@ -107,9 +104,10 @@ RSpec.describe 'Accounts API', type: :request do
   # Test suite for PUT /accounts/:id
   describe 'PUT /users/:user_id/accounts/:id' do
     let(:valid_attributes) { { CLABE: 'new valid CLABE' }.to_json }
+    before { put "/users/#{user_id}/accounts/#{account_id}", params: valid_attributes, headers: headers }
 
     context 'when the record exists' do
-      before { put "/users/#{user_id}/accounts/#{account_id}", params: valid_attributes, headers: admin_headers }
+      let(:headers) { admin_headers }
 
       it 'updates the record' do
         expect(response.body).to be_empty
@@ -121,8 +119,6 @@ RSpec.describe 'Accounts API', type: :request do
     end
 
     context 'when the user is not an admin' do
-      before { put "/users/#{user_id}/accounts/#{account_id}", params: valid_attributes, headers: headers }
-
       it 'returns an Unauthorized request error' do
         expect(response.body)
         .to match(/Unauthorized request/)
@@ -136,17 +132,16 @@ RSpec.describe 'Accounts API', type: :request do
 
   # Test suite for DELETE /accounts/:id
   describe 'DELETE /users/:user_id/accounts/:id' do
-    context 'when the record exists' do
-      before { delete "/users/#{user_id}/accounts/#{account_id}", headers: admin_headers }
+    before { delete "/users/#{user_id}/accounts/#{account_id}", headers: headers }
 
+    context 'when the record exists' do
+      let(:headers) { admin_headers }
       it 'returns status code 204' do
         expect(response).to have_http_status(204)
       end
     end
 
     context 'when the user is not an admin' do
-      before { delete "/users/#{user_id}/accounts/#{account_id}", headers: headers }
-
       it 'returns an Unauthorized request error' do
         expect(response.body)
         .to match(/Unauthorized request/)

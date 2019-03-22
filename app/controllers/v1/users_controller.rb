@@ -21,7 +21,12 @@ class V1::UsersController < ApplicationController
 
   # GET /users/:id
   def show
-    json_response(@user)
+    admin_or_self(current_user: current_user, user: @user, id: params[:id],
+      action: -> {
+        json_response(@user)
+      }, other: -> {
+        json_response(@user)
+      })
   end
 
   # PUT /users/:id

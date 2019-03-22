@@ -24,4 +24,12 @@ module ControllerSpecHelper
       "Content-Type" => "application/json"
     }
   end
+
+  # return admin headers
+  def admin_headers
+    {
+      "Authorization" => token_generator(admin.id),
+      "Content-Type" => "application/json"
+    }
+  end
 end
