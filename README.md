@@ -1,24 +1,26 @@
-# README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+# YTP Test api
+Sample api developped in rails as a code sample for YTP
 
-Things you may want to cover:
+* Ruby version `2.6`
+* Rails version `5.2.2.1`
+* DB driver `postgres`
+* DB name `ytp_test`
 
-* Ruby version
+## Seeded admin credentials
+* `{ "email":"admin@ytp.com", "password":"sekret" }`
 
-* System dependencies
+## Links
+* [Heroku app (https://afternoon-everglades-13693.herokuapp.com)](https://afternoon-everglades-13693.herokuapp.com)
+* [Git Repo](https://github.com/silverspine/ytp_test)
 
-* Configuration
+## Routes
+All the routes are in the standard RESTful resource format, where user has accounts has movements
+(`/users/:user_id/accounts/:account_id/movements/:id`) exept for a few noteworthy routes.
 
-* Database creation
+Method | route | request | notes
+--- | --- | --- | ---
+`POST` | `/auth/login` | `{ "email":"admin@ytp.com", "password":"sekret" }` | authenticates a user and returns a jwt token
+`POST` | `/users/:user_id/accounts/:id/transfer` | `{ "CLABE":"asdfasd","amount":300 }` | makes a transfer from `:id` account of `user_id` user to `CLABE` destination account for the `amount`
 
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+Keep in mind that all routes require the Authentication header except for `/auth/login`
