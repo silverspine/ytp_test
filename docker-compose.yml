@@ -1,0 +1,26 @@
+version: '3'
+services:
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: ytp_test
+      POSTGRES_USER: ytp_test_user
+      POSTGRES_PASSWORD: ytp_test_password
+
+  app:
+    build: .
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    volumes:
+      - ".:/ytp_test"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    links:
+      - db
+    environment:
+      DB_NAME: ytp_test
+      DB_USER: ytp_test_user
+      DB_PASSWORD: ytp_test_password
+      DB_HOST: db
